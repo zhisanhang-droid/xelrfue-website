@@ -56,29 +56,71 @@ export async function onRequestGet({ request, env }) {
     redirect_uri: redirectUri,
   });
 
-  const tokenResponse = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-    body,
-  });
+  let tokenResponse;
+  try {
+    tokenResponse = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body,
+    });
+  } catch {
+    console.error("Amazon Ads OAuth failed at stage TOKEN_REQUEST");
+    return htmlResponse(
+      "Authorization failed",
+      "The server could not reach Amazon's token service (stage TOKEN_REQUEST). Please start again.",
+      502,
+    );
+  }
+
+  let token;
+  try {
+    const responseText = await tokenResponse.text();
+    token = JSON.parse(responseText);
+  } catch {
+    console.error("Amazon Ads OAuth failed at stage TOKEN_RESPONSE");
+    return htmlResponse(
+      "Authorization failed",
+      "Amazon returned an unreadable token response (stage TOKEN_RESPONSE). Please start again.",
+      502,
+    );
+  }
 
   if (!tokenResponse.ok) {
-    return htmlResponse("Authorization failed", "Amazon rejected the token exchange. No credential was stored.", 502);
+    const errorCode = typeof token.error === "string" ? token.error : "unknown_error";
+    console.error(`Amazon Ads OAuth rejected at stage TOKEN_EXCHANGE: ${errorCode}`);
+    return htmlResponse(
+      "Authorization failed",
+      `Amazon rejected the token exchange (stage TOKEN_EXCHANGE: ${errorCode}). Please start again.`,
+      400,
+    );
   }
 
-  const token = await tokenResponse.json();
   if (!token.refresh_token) {
-    return htmlResponse("Authorization failed", "Amazon did not return a long-term authorization token.", 502);
+    console.error("Amazon Ads OAuth failed at stage REFRESH_TOKEN");
+    return htmlResponse(
+      "Authorization failed",
+      "Amazon did not return a long-term authorization token (stage REFRESH_TOKEN). Please start again.",
+      502,
+    );
   }
 
-  await env.AMAZON_ADS_TOKENS.put(
-    "primary",
-    JSON.stringify({
-      refreshToken: token.refresh_token,
-      scope: token.scope || "advertising::campaign_management",
-      connectedAt: new Date().toISOString(),
-    }),
-  );
+  try {
+    await env.AMAZON_ADS_TOKENS.put(
+      "primary",
+      JSON.stringify({
+        refreshToken: token.refresh_token,
+        scope: token.scope || "advertising::campaign_management",
+        connectedAt: new Date().toISOString(),
+      }),
+    );
+  } catch {
+    console.error("Amazon Ads OAuth failed at stage TOKEN_STORAGE");
+    return htmlResponse(
+      "Authorization failed",
+      "The long-term token could not be stored (stage TOKEN_STORAGE). Please start again.",
+      502,
+    );
+  }
 
   return htmlResponse(
     "Account connected",
