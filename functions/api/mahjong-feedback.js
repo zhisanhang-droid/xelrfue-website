@@ -109,7 +109,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   if (record.email && !record.emailConsent) {
-    return json({ message: "Please agree to receive launch updates if you leave an email." }, 400);
+    return json({ message: "Please check the box if you'd like the launch note and research thank-you discount." }, 400);
   }
 
   record.id = crypto.randomUUID();
