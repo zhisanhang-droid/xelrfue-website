@@ -18,6 +18,19 @@ Serve this directory with any static HTTP server. No build step is required.
 
 API credentials and account tokens must never be committed to this repository.
 
+## Mahjong preview feedback
+
+The product feedback page is available at `/mahjong-preview/`.
+
+The feedback endpoint is `/api/mahjong-feedback` and requires these Cloudflare
+Pages settings before production collection:
+
+- KV binding: `MAHJONG_FEEDBACK`
+- Secret: `MAHJONG_FEEDBACK_EXPORT_TOKEN`
+
+Submit feedback with `POST /api/mahjong-feedback`. Export CSV with
+`GET /api/mahjong-feedback?token=<MAHJONG_FEEDBACK_EXPORT_TOKEN>`.
+
 ## Amazon Ads authorization
 
 The private authorization page is available at `/auth/amazon/`. Cloudflare Pages
