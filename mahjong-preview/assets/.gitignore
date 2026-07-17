@@ -1,4 +1,6 @@
 *.png
 photos-raw/
+sample-raw/
 !web/
 !photos/
+!sample/
