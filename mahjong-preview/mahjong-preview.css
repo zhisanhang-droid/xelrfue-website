@@ -85,9 +85,9 @@ nav a:hover {
 
 .hero-media {
   width: 100%;
-  min-height: clamp(390px, 55vw, 650px);
-  height: clamp(390px, 55vw, 650px);
-  object-fit: contain;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  object-fit: cover;
   object-position: center;
   background: var(--card);
   border: 1px solid var(--line);
@@ -587,7 +587,7 @@ textarea {
   }
 
   .hero-media {
-    min-height: 420px;
+    min-height: 0;
   }
 
   .sample-feature.reverse .sample-gallery {
@@ -619,7 +619,7 @@ textarea {
   }
 
   .hero-media {
-    min-height: 360px;
+    min-height: 0;
   }
 
   .design-grid,

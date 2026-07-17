@@ -12,8 +12,6 @@ const CSV_HEADERS = {
 const MAX_TEXT_LENGTH = 1200;
 const ALLOWED_FIELDS = [
   "designChoice",
-  "stylePreference",
-  "packPreference",
   "opacityPreference",
   "idea",
   "email",
@@ -102,7 +100,7 @@ export async function onRequestPost({ request, env }) {
 
   record.emailConsent = input.emailConsent === true || input.emailConsent === "yes";
 
-  if (!record.designChoice || !record.stylePreference || !record.packPreference || !record.opacityPreference) {
+  if (!record.designChoice || !record.opacityPreference) {
     return json({ message: "Please answer the required feedback questions." }, 400);
   }
 
@@ -153,8 +151,6 @@ export async function onRequestGet({ request, env }) {
     const headers = [
       "createdAt",
       "designChoice",
-      "stylePreference",
-      "packPreference",
       "opacityPreference",
       "idea",
       "email",
