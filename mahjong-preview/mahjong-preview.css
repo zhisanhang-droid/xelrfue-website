@@ -76,22 +76,13 @@ nav a:hover {
 
 .hero {
   min-height: calc(100vh - 78px);
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  display: flex;
   align-items: center;
-  gap: clamp(32px, 6vw, 76px);
-  padding: clamp(44px, 8vw, 86px) 0;
+  padding: clamp(70px, 12vw, 138px) 0 clamp(58px, 9vw, 110px);
 }
 
-.hero-media {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  height: auto;
-  object-fit: cover;
-  object-position: center;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+.hero-copy {
+  width: min(100%, 980px);
 }
 
 .eyebrow {
@@ -111,10 +102,10 @@ p {
 }
 
 h1 {
-  max-width: 660px;
+  max-width: 920px;
   margin-bottom: 24px;
-  font-size: clamp(3.1rem, 7vw, 6.8rem);
-  line-height: 0.95;
+  font-size: clamp(3.4rem, 8vw, 7.4rem);
+  line-height: 0.92;
 }
 
 h2 {
@@ -130,7 +121,7 @@ h3 {
 }
 
 .lede {
-  max-width: 680px;
+  max-width: 760px;
   color: #33403a;
   font-size: clamp(1.06rem, 2vw, 1.25rem);
 }
@@ -586,10 +577,6 @@ textarea {
     min-height: auto;
   }
 
-  .hero-media {
-    min-height: 0;
-  }
-
   .sample-feature.reverse .sample-gallery {
     order: 0;
   }
@@ -616,10 +603,6 @@ textarea {
 
   h1 {
     font-size: clamp(2.7rem, 14vw, 4.4rem);
-  }
-
-  .hero-media {
-    min-height: 0;
   }
 
   .design-grid,
