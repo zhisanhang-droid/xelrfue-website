@@ -98,7 +98,7 @@ export async function onRequestPost({ request, env }) {
     record[field] = field === "idea" ? cleanText(input[field], MAX_TEXT_LENGTH) : cleanText(input[field]);
   }
 
-  record.emailConsent = input.emailConsent === true || input.emailConsent === "yes";
+  record.emailConsent = Boolean(record.email);
 
   if (!record.designChoice || !record.opacityPreference) {
     return json({ message: "Please answer the required feedback questions." }, 400);
@@ -106,10 +106,6 @@ export async function onRequestPost({ request, env }) {
 
   if (!isValidEmail(record.email)) {
     return json({ message: "Please enter a valid email address." }, 400);
-  }
-
-  if (record.email && !record.emailConsent) {
-    return json({ message: "Please check the box if you'd like the launch note and research thank-you discount." }, 400);
   }
 
   record.id = crypto.randomUUID();
