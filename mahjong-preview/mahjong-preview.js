@@ -23,15 +23,6 @@ function createLightbox() {
     <button class="lightbox-close" type="button" aria-label="Close enlarged image">Close</button>
     <img alt="" />
   `;
-  Object.assign(lightbox.style, {
-    position: "fixed",
-    inset: "0",
-    zIndex: "20",
-    display: "grid",
-    placeItems: "center",
-    padding: "clamp(18px, 4vw, 44px)",
-    background: "rgba(13, 18, 17, 0.82)",
-  });
   document.body.append(lightbox);
   return lightbox;
 }
