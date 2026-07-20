@@ -23,6 +23,15 @@ function createLightbox() {
     <button class="lightbox-close" type="button" aria-label="Close enlarged image">Close</button>
     <img alt="" />
   `;
+  Object.assign(lightbox.style, {
+    position: "fixed",
+    inset: "0",
+    zIndex: "20",
+    display: "grid",
+    placeItems: "center",
+    padding: "clamp(18px, 4vw, 44px)",
+    background: "rgba(13, 18, 17, 0.82)",
+  });
   document.body.append(lightbox);
   return lightbox;
 }
@@ -30,6 +39,24 @@ function createLightbox() {
 const lightbox = zoomImages.length ? createLightbox() : null;
 const lightboxImage = lightbox?.querySelector("img");
 const lightboxClose = lightbox?.querySelector(".lightbox-close");
+
+if (lightboxImage) {
+  Object.assign(lightboxImage.style, {
+    width: "auto",
+    maxWidth: "min(100%, 1280px)",
+    maxHeight: "min(84vh, 900px)",
+    display: "block",
+    objectFit: "contain",
+  });
+}
+
+if (lightboxClose) {
+  Object.assign(lightboxClose.style, {
+    position: "absolute",
+    top: "clamp(14px, 3vw, 28px)",
+    right: "clamp(14px, 3vw, 28px)",
+  });
+}
 
 function closeLightbox() {
   if (!lightbox) return;
