@@ -1,5 +1,6 @@
 const form = document.querySelector("#feedback-form");
 const statusEl = document.querySelector("#form-status");
+const zoomTargetSelector = ".design-frame, .sample-gallery img, .photo-grid img, .idea-strip img";
 const zoomImages = document.querySelectorAll(
   ".design-frame img, .sample-gallery img, .photo-grid img, .idea-strip img",
 );
@@ -34,7 +35,7 @@ function closeLightbox() {
   if (!lightbox) return;
   lightbox.hidden = true;
   document.body.classList.remove("lightbox-open");
-  lightboxImage.removeAttribute("src");
+  lightboxImage?.removeAttribute("src");
 }
 
 function openLightbox(image) {
@@ -46,18 +47,30 @@ function openLightbox(image) {
   lightboxClose?.focus();
 }
 
+function imageFromZoomTarget(target) {
+  if (!target?.closest) return null;
+  const zoomTarget = target.closest(zoomTargetSelector);
+  if (!zoomTarget) return null;
+  return zoomTarget.matches("img") ? zoomTarget : zoomTarget.querySelector("img");
+}
+
 zoomImages.forEach((image) => {
   image.classList.add("zoomable-image");
-  image.tabIndex = 0;
-  image.setAttribute("role", "button");
-  image.setAttribute("aria-label", `${image.alt}. Click to enlarge.`);
-  image.addEventListener("click", () => openLightbox(image));
-  image.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openLightbox(image);
-    }
-  });
+  image.title = "Click to enlarge";
+});
+
+document.querySelectorAll(".design-frame").forEach((frame) => {
+  frame.classList.add("zoomable-frame");
+  frame.tabIndex = 0;
+  frame.setAttribute("role", "button");
+  frame.setAttribute("aria-label", `${frame.querySelector("img")?.alt || "Preview image"}. Click to enlarge.`);
+});
+
+document.addEventListener("click", (event) => {
+  const image = imageFromZoomTarget(event.target);
+  if (image) {
+    openLightbox(image);
+  }
 });
 
 lightbox?.addEventListener("click", (event) => {
@@ -69,6 +82,15 @@ lightbox?.addEventListener("click", (event) => {
 lightboxClose?.addEventListener("click", closeLightbox);
 
 document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    const image = imageFromZoomTarget(event.target);
+    if (image) {
+      event.preventDefault();
+      openLightbox(image);
+      return;
+    }
+  }
+
   if (event.key === "Escape" && lightbox && !lightbox.hidden) {
     closeLightbox();
   }

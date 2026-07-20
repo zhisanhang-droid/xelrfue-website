@@ -524,11 +524,13 @@ textarea {
   border-radius: 8px;
 }
 
-.zoomable-image {
+.zoomable-image,
+.zoomable-frame {
   cursor: zoom-in;
 }
 
-.zoomable-image:focus-visible {
+.zoomable-image:focus-visible,
+.zoomable-frame:focus-visible {
   outline: 3px solid var(--blue);
   outline-offset: 4px;
 }
