@@ -10,6 +10,7 @@ const CSV_HEADERS = {
 };
 
 const MAX_TEXT_LENGTH = 1200;
+const FEISHU_API_BASE = "https://open.feishu.cn/open-apis";
 const ALLOWED_FIELDS = [
   "designChoice",
   "opacityPreference",
@@ -34,6 +35,14 @@ function cleanText(value, maxLength = 240) {
 function isValidEmail(value) {
   if (!value) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function hasFeishuSheetConfig(env) {
+  return env.FEISHU_APP_ID && env.FEISHU_APP_SECRET && env.FEISHU_FEEDBACK_SPREADSHEET_TOKEN && env.FEISHU_FEEDBACK_SHEET_ID;
+}
+
+function hasFeishuBotConfig(env) {
+  return Boolean(env.FEISHU_GROUP_BOT_WEBHOOK);
 }
 
 function csvCell(value) {
@@ -84,7 +93,123 @@ async function storeFeedback(env, record) {
   return true;
 }
 
-export async function onRequestPost({ request, env }) {
+async function getFeishuTenantToken(env) {
+  const response = await fetch(`${FEISHU_API_BASE}/auth/v3/tenant_access_token/internal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify({
+      app_id: env.FEISHU_APP_ID,
+      app_secret: env.FEISHU_APP_SECRET,
+    }),
+  });
+  const result = await response.json();
+
+  if (!response.ok || result.code !== 0 || !result.tenant_access_token) {
+    throw new Error(`Feishu token failed: ${result.msg || response.status}`);
+  }
+
+  return result.tenant_access_token;
+}
+
+async function appendFeedbackToFeishuSheet(env, record) {
+  if (!hasFeishuSheetConfig(env)) return false;
+
+  const token = await getFeishuTenantToken(env);
+  const range = `${env.FEISHU_FEEDBACK_SHEET_ID}!A1:H1`;
+  const values = [
+    [
+      record.createdAt,
+      record.designChoice,
+      record.opacityPreference,
+      record.idea,
+      record.email,
+      record.source,
+      record.id,
+      record.userAgent,
+    ],
+  ];
+
+  const response = await fetch(
+    `${FEISHU_API_BASE}/sheets/v2/spreadsheets/${encodeURIComponent(env.FEISHU_FEEDBACK_SPREADSHEET_TOKEN)}/values_append`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify({
+        valueRange: {
+          range,
+          values,
+        },
+      }),
+    },
+  );
+  const result = await response.json();
+
+  if (!response.ok || result.code !== 0) {
+    throw new Error(`Feishu sheet append failed: ${result.msg || response.status}`);
+  }
+
+  return true;
+}
+
+async function signFeishuBotMessage(secret) {
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(`${timestamp}\n${secret}`));
+  const sign = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return { timestamp, sign };
+}
+
+async function sendFeishuNotification(env, record) {
+  if (!hasFeishuBotConfig(env)) return false;
+
+  const text = [
+    "XELRFUE Mahjong Preview 收到新反馈",
+    "",
+    `设计选择：${record.designChoice || "-"}`,
+    `透明度偏好：${record.opacityPreference || "-"}`,
+    `邮箱：${record.email || "-"}`,
+    `反馈：${record.idea || "-"}`,
+    "",
+    env.FEISHU_FEEDBACK_SPREADSHEET_URL ? `反馈表：${env.FEISHU_FEEDBACK_SPREADSHEET_URL}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const signature = env.FEISHU_GROUP_BOT_SECRET ? await signFeishuBotMessage(env.FEISHU_GROUP_BOT_SECRET) : {};
+  const response = await fetch(env.FEISHU_GROUP_BOT_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+    body: JSON.stringify({
+      ...signature,
+      msg_type: "text",
+      content: { text },
+    }),
+  });
+  const result = await response.json();
+
+  if (!response.ok || ![0, undefined].includes(result.code ?? result.StatusCode)) {
+    throw new Error(`Feishu bot notify failed: ${result.msg || result.message || response.status}`);
+  }
+
+  return true;
+}
+
+async function syncFeedbackToFeishu(env, record) {
+  const tasks = [appendFeedbackToFeishuSheet(env, record), sendFeishuNotification(env, record)];
+  const results = await Promise.allSettled(tasks);
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error(result.reason?.message || "Feishu sync failed");
+    }
+  }
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   let input;
 
   try {
@@ -117,6 +242,13 @@ export async function onRequestPost({ request, env }) {
 
     if (!stored) {
       return json({ message: "Feedback storage is not configured yet." }, 503);
+    }
+
+    const feishuSync = syncFeedbackToFeishu(env, record);
+    if (typeof waitUntil === "function") {
+      waitUntil(feishuSync);
+    } else {
+      await feishuSync;
     }
 
     return json({ ok: true });
@@ -152,6 +284,7 @@ export async function onRequestGet({ request, env }) {
       "email",
       "emailConsent",
       "source",
+      "userAgent",
     ];
 
     const csv = [

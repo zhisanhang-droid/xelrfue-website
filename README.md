@@ -27,9 +27,20 @@ Pages settings before production collection:
 
 - KV binding: `MAHJONG_FEEDBACK`
 - Secret: `MAHJONG_FEEDBACK_EXPORT_TOKEN`
+- Secret: `FEISHU_APP_ID`
+- Secret: `FEISHU_APP_SECRET`
+- Environment variable: `FEISHU_FEEDBACK_SPREADSHEET_TOKEN`
+- Environment variable: `FEISHU_FEEDBACK_SHEET_ID`
+- Environment variable: `FEISHU_FEEDBACK_SPREADSHEET_URL`
+- Secret: `FEISHU_GROUP_BOT_WEBHOOK`
+- Secret: `FEISHU_GROUP_BOT_SECRET` (optional, only when the bot has signature verification enabled)
 
 Submit feedback with `POST /api/mahjong-feedback`. Export CSV with
 `GET /api/mahjong-feedback?token=<MAHJONG_FEEDBACK_EXPORT_TOKEN>`.
+
+When Feishu settings are configured, each feedback submission is also appended
+to the Feishu feedback sheet and sent to the configured Feishu group bot. Feishu
+sync failures are logged but do not block the customer-facing submission.
 
 ## Amazon Ads authorization
 
