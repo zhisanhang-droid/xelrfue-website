@@ -41,6 +41,8 @@ Submit feedback with `POST /api/mahjong-feedback`. Export CSV with
 When Feishu settings are configured, each feedback submission is also appended
 to the Feishu feedback sheet and sent to the configured Feishu group bot. Feishu
 sync failures are logged but do not block the customer-facing submission.
+The Feishu sheet columns are: created time, design choice, translucency
+feedback, 4-pack preference, idea, email, source, record ID, and user agent.
 
 ## Amazon Ads authorization
 

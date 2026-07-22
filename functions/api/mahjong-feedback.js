@@ -14,6 +14,7 @@ const FEISHU_API_BASE = "https://open.feishu.cn/open-apis";
 const ALLOWED_FIELDS = [
   "designChoice",
   "opacityPreference",
+  "packPreference",
   "idea",
   "email",
   "emailConsent",
@@ -115,12 +116,13 @@ async function appendFeedbackToFeishuSheet(env, record) {
   if (!hasFeishuSheetConfig(env)) return false;
 
   const token = await getFeishuTenantToken(env);
-  const range = `${env.FEISHU_FEEDBACK_SHEET_ID}!A1:H1`;
+  const range = `${env.FEISHU_FEEDBACK_SHEET_ID}!A1:I1`;
   const values = [
     [
       record.createdAt,
       record.designChoice,
       record.opacityPreference,
+      record.packPreference,
       record.idea,
       record.email,
       record.source,
@@ -167,14 +169,15 @@ async function sendFeishuNotification(env, record) {
   if (!hasFeishuBotConfig(env)) return false;
 
   const text = [
-    "XELRFUE Mahjong Preview 收到新反馈",
+    "XELRFUE Mahjong Preview received new feedback",
     "",
-    `设计选择：${record.designChoice || "-"}`,
-    `透明度偏好：${record.opacityPreference || "-"}`,
-    `邮箱：${record.email || "-"}`,
-    `反馈：${record.idea || "-"}`,
+    `Design choice: ${record.designChoice || "-"}`,
+    `Print translucency feedback: ${record.opacityPreference || "-"}`,
+    `4-pack preference: ${record.packPreference || "-"}`,
+    `Email: ${record.email || "-"}`,
+    `Feedback: ${record.idea || "-"}`,
     "",
-    env.FEISHU_FEEDBACK_SPREADSHEET_URL ? `反馈表：${env.FEISHU_FEEDBACK_SPREADSHEET_URL}` : "",
+    env.FEISHU_FEEDBACK_SPREADSHEET_URL ? `Feedback sheet: ${env.FEISHU_FEEDBACK_SPREADSHEET_URL}` : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -225,7 +228,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
 
   record.emailConsent = Boolean(record.email);
 
-  if (!record.designChoice || !record.opacityPreference) {
+  if (!record.designChoice || !record.opacityPreference || !record.packPreference) {
     return json({ message: "Please answer the required feedback questions." }, 400);
   }
 
@@ -280,6 +283,7 @@ export async function onRequestGet({ request, env }) {
       "createdAt",
       "designChoice",
       "opacityPreference",
+      "packPreference",
       "idea",
       "email",
       "emailConsent",

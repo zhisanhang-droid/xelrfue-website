@@ -125,6 +125,7 @@ form?.addEventListener("submit", async (event) => {
   const payload = {
     designChoice: formValue(data, "designChoice"),
     opacityPreference: formValue(data, "opacityPreference"),
+    packPreference: formValue(data, "packPreference"),
     idea: formValue(data, "idea"),
     email,
     emailConsent: Boolean(email),

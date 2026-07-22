@@ -131,6 +131,7 @@ h3 {
 }
 
 .small-note,
+.field-note,
 .section-heading p,
 .sample-text p,
 .sample-text li,
@@ -449,6 +450,13 @@ legend,
   margin-bottom: 4px;
   color: var(--ink);
   font-weight: 780;
+}
+
+.field-note {
+  max-width: 58ch;
+  margin: -2px 0 2px;
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 label {
